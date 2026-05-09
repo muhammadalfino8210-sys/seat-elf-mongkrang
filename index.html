@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Booking ELF Mongkrang</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    background:#f2f2f2;
+    margin:0;
+    padding:20px;
+    text-align:center;
+}
+
+h1{
+    margin-bottom:5px;
+}
+
+input{
+    padding:12px;
+    width:220px;
+    border-radius:10px;
+    border:1px solid #ccc;
+}
+
+button{
+    padding:12px 16px;
+    border:none;
+    border-radius:10px;
+    background:#007bff;
+    color:white;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+.bus{
+    margin:30px auto;
+    background:white;
+    border:6px solid #3d36c7;
+    border-radius:40px;
+    width:350px;
+    padding:20px;
+}
+
+.row{
+    display:flex;
+    justify-content:center;
+    gap:15px;
+    margin:12px 0;
+}
+
+.left{
+    width:90px;
+}
+
+.middle{
+    width:90px;
+}
+
+.right{
+    width:90px;
+}
+
+.seat{
+    background:#0d2ea8;
+    color:white;
+    height:70px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    padding:5px;
+    cursor:pointer;
+    text-align:center;
+    transition:0.2s;
+}
+
+.seat:hover{
+    transform:scale(1.03);
+}
+
+.booked{
+    background:#ff5a5a;
+}
+
+.mine{
+    background:#28a745;
+}
+
+.driver{
+    background:#ffd43b;
+    color:black;
+    cursor:default;
+}
+
+.empty{
+    visibility:hidden;
+}
+
+.info{
+    margin-top:15px;
+    font-size:14px;
+}
+
+</style>
+</head>
+<body>
+
+<h1>BOOKING ELF</h1>
+<p>Bukit Mongkrang</p>
+
+<input type="text" id="nameInput" placeholder="Masukkan nama panggilan">
+<br>
+<button onclick="saveName()">Simpan Nama</button>
+
+<div class="info">
+1 orang hanya bisa memilih 1 kursi
+</div>
+
+<div class="bus">
+
+    <!-- BARIS 1 -->
+    <div class="row">
+        <div class="seat driver left">SUPIR</div>
+
+        <div class="empty middle"></div>
+
+        <div class="seat" onclick="bookSeat(5)" id="seat-5">05</div>
+        <div class="seat" onclick="bookSeat(8)" id="seat-8">08</div>
+        <div class="seat" onclick="bookSeat(11)" id="seat-11">11</div>
+    </div>
+
+    <!-- BARIS 2 -->
+    <div class="row">
+        <div class="seat left" onclick="bookSeat(2)" id="seat-2">02</div>
+
+        <div class="seat middle" onclick="bookSeat(4)" id="seat-4">04</div>
+        <div class="seat" onclick="bookSeat(7)" id="seat-7">07</div>
+        <div class="seat" onclick="bookSeat(10)" id="seat-10">10</div>
+        <div class="seat" onclick="bookSeat(14)" id="seat-14">14</div>
+    </div>
+
+    <!-- BARIS 3 -->
+    <div class="row">
+        <div class="seat left" onclick="bookSeat(1)" id="seat-1">01</div>
+
+        <div class="seat middle" onclick="bookSeat(3)" id="seat-3">03</div>
+        <div class="seat" onclick="bookSeat(6)" id="seat-6">06</div>
+        <div class="seat" onclick="bookSeat(9)" id="seat-9">09</div>
+        <div class="seat" onclick="bookSeat(13)" id="seat-13">13</div>
+    </div>
+
+    <!-- BARIS 4 -->
+    <div class="row">
+        <div class="empty"></div>
+        <div class="empty"></div>
+        <div class="empty"></div>
+        <div class="empty"></div>
+
+        <div class="seat" onclick="bookSeat(12)" id="seat-12">12</div>
+    </div>
+
+    <!-- BARIS 5 -->
+    <div class="row">
+        <div class="empty"></div>
+        <div class="empty"></div>
+        <div class="empty"></div>
+        <div class="empty"></div>
+
+        <div class="seat" onclick="bookSeat(15)" id="seat-15">15</div>
+    </div>
+
+</div>
+
+<button onclick="cancelBooking()">
+Batalkan Booking Saya
+</button>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+
+// Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyB-0vQfRqo8hg8Nnx9OjdupN8_QWuDAviM",
+  authDomain: "booking-elf.firebaseapp.com",
+  databaseURL: "https://booking-elf-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "booking-elf",
+  storageBucket: "booking-elf.firebasestorage.app",
+  messagingSenderId: "962719974645",
+  appId: "1:962719974645:web:1a5d74ef571593f822b1bc",
+  measurementId: "G-64KN3WGBCT"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.database();
+
+let username = "";
+
+// Simpan nama
+function saveName(){
+
+    const input = document.getElementById("nameInput").value.trim();
+
+    if(input === ""){
+        alert("Masukkan nama dulu");
+        return;
+    }
+
+    username = input;
+
+    alert("Halo " + username);
+}
+
+// Booking kursi
+function bookSeat(number){
+
+    if(username === ""){
+        alert("Masukkan nama dulu");
+        return;
+    }
+
+    db.ref("seats").once("value", snapshot => {
+
+        const data = snapshot.val() || {};
+
+        // cek apakah user sudah punya kursi
+        for(let key in data){
+
+            if(data[key].name === username){
+
+                alert("Kamu sudah booking kursi " + key);
+                return;
+            }
+
+        }
+
+        // cek kursi sudah dipakai atau belum
+        if(data[number]){
+
+            alert("Kursi sudah dibooking");
+            return;
+        }
+
+        // simpan booking
+        db.ref("seats/" + number).set({
+            name: username
+        });
+
+    });
+
+}
+
+// Batal booking
+function cancelBooking(){
+
+    if(username === ""){
+        alert("Masukkan nama dulu");
+        return;
+    }
+
+    db.ref("seats").once("value", snapshot => {
+
+        const data = snapshot.val() || {};
+
+        for(let key in data){
+
+            if(data[key].name === username){
+
+                db.ref("seats/" + key).remove();
+
+                alert("Booking dibatalkan");
+
+                return;
+            }
+
+        }
+
+        alert("Kamu belum booking kursi");
+
+    });
+
+}
+
+// realtime update
+db.ref("seats").on("value", snapshot => {
+
+    const data = snapshot.val() || {};
+
+    // reset semua
+    for(let i=1;i<=15;i++){
+
+        const seat = document.getElementById("seat-" + i);
+
+        if(seat){
+
+            seat.classList.remove("booked");
+            seat.classList.remove("mine");
+
+            seat.innerHTML = String(i).padStart(2,'0');
+        }
+
+    }
+
+    // isi booking
+    for(let key in data){
+
+        const seat = document.getElementById("seat-" + key);
+
+        if(seat){
+
+            seat.innerHTML = data[key].name;
+
+            if(data[key].name === username){
+
+                seat.classList.add("mine");
+
+            }else{
+
+                seat.classList.add("booked");
+
+            }
+
+        }
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
